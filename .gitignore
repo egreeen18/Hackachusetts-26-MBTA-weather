@@ -1,0 +1,18 @@
+# Never commit (see README "Never commit")
+.env
+data/cache/
+data/snapshots/
+cache/
+
+# scratch / temp output
+*_out.txt
+hosp2.txt
+gitstat.txt
+gitbranch.txt
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/

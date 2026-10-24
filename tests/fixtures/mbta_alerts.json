@@ -1,0 +1,81 @@
+{
+  "data": [
+    {
+      "id": "alert-green-e-suspension",
+      "type": "alert",
+      "attributes": {
+        "effect": "SUSPENSION",
+        "severity": 7,
+        "header": "Green Line E branch suspended between Heath St and Symphony due to snow.",
+        "active_period": [
+          {"start": "2026-01-12T06:00:00-05:00", "end": "2026-01-12T20:00:00-05:00"}
+        ],
+        "informed_entity": [
+          {"route": "Green-E", "direction_id": 0, "activities": ["BOARD", "EXIT", "RIDE"]},
+          {"route": "Green-E", "direction_id": 1, "activities": ["BOARD", "EXIT", "RIDE"]}
+        ]
+      }
+    },
+    {
+      "id": "alert-elevator-longwood",
+      "type": "alert",
+      "attributes": {
+        "effect": "ELEVATOR_CLOSURE",
+        "severity": 3,
+        "header": "Elevator 812 (Longwood, lobby to platform) is out of service.",
+        "active_period": [
+          {"start": "2026-01-10T00:00:00-05:00", "end": null}
+        ],
+        "informed_entity": [
+          {"stop": "place-longw", "activities": ["USING_WHEELCHAIR"]},
+          {"facility": "facility-812"}
+        ]
+      }
+    },
+    {
+      "id": "alert-elevator-brigham",
+      "type": "alert",
+      "attributes": {
+        "effect": "ELEVATOR_CLOSURE",
+        "severity": 3,
+        "header": "Elevator 907 (Brigham Circle) is out of service.",
+        "active_period": [
+          {"start": "2026-01-11T00:00:00-05:00", "end": null}
+        ],
+        "informed_entity": [
+          {"stop": "place-brmnl", "activities": ["USING_WHEELCHAIR"]}
+        ]
+      }
+    },
+    {
+      "id": "alert-green-d-delay",
+      "type": "alert",
+      "attributes": {
+        "effect": "DELAY",
+        "severity": 4,
+        "header": "Green Line D branch delays of about 10 minutes.",
+        "active_period": [
+          {"start": "2026-01-12T07:00:00-05:00", "end": "2026-01-12T12:00:00-05:00"}
+        ],
+        "informed_entity": [
+          {"route": "Green-D", "activities": ["BOARD", "EXIT", "RIDE"]}
+        ]
+      }
+    },
+    {
+      "id": "alert-elevator-outside-area",
+      "type": "alert",
+      "attributes": {
+        "effect": "ELEVATOR_CLOSURE",
+        "severity": 3,
+        "header": "Elevator at Alewife is out of service (outside study area).",
+        "active_period": [
+          {"start": "2026-01-09T00:00:00-05:00", "end": null}
+        ],
+        "informed_entity": [
+          {"stop": "place-alfcl", "activities": ["USING_WHEELCHAIR"]}
+        ]
+      }
+    }
+  ]
+}
