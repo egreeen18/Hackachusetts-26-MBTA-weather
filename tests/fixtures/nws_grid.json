@@ -1,0 +1,21 @@
+{
+  "properties": {
+    "snowfallAmount": {
+      "uom": "wmoUnit:mm",
+      "values": [
+        {"validTime": "2026-01-12T04:00:00+00:00/PT2H", "value": 0},
+        {"validTime": "2026-01-12T06:00:00+00:00/PT1H", "value": 25.4},
+        {"validTime": "2026-01-12T07:00:00+00:00/PT1H", "value": 50.8},
+        {"validTime": "2026-01-12T08:00:00+00:00/PT1H", "value": 76.2},
+        {"validTime": "2026-01-12T09:00:00+00:00/PT3H", "value": 101.6},
+        {"validTime": "2026-01-12T12:00:00+00:00/PT6H", "value": 0}
+      ]
+    },
+    "windSpeed": {
+      "uom": "wmoUnit:km_h-1",
+      "values": [
+        {"validTime": "2026-01-12T06:00:00+00:00/PT6H", "value": 55}
+      ]
+    }
+  }
+}
