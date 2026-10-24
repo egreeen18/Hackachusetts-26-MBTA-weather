@@ -6,7 +6,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.adapters.nws import parse_storm_inputs, _parse_duration_hours, _parse_valid_time
+from src.adapters.nws import (
+    parse_storm_inputs,
+    parse_active_alerts,
+    _parse_duration_hours,
+    _parse_valid_time,
+)
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 
@@ -14,6 +19,10 @@ FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 def _grid_props() -> dict:
     obj = json.loads((FIXTURES / "nws_grid.json").read_text(encoding="utf-8"))
     return obj["properties"]
+
+
+def _alerts() -> dict:
+    return json.loads((FIXTURES / "nws_alerts.json").read_text(encoding="utf-8"))
 
 
 def test_total_snow_inches_from_mm():
@@ -58,3 +67,28 @@ def test_valid_time_split():
     start, hours = _parse_valid_time("2026-01-12T06:00:00+00:00/PT2H")
     assert start.hour == 6
     assert hours == 2
+
+
+# ------------------------------------------------------------------ active alerts
+
+
+def test_alerts_detect_winter_storm_product():
+    # Fixture holds a Winter Storm Warning + a Wind Advisory.
+    out = parse_active_alerts(_alerts())
+    assert out["winter_storm_active"] is True
+    assert "Winter Storm Warning" in out["events"]
+    assert "Wind Advisory" in out["events"]
+
+
+def test_alerts_wind_only_is_not_winter_storm():
+    only_wind = {"features": [
+        {"properties": {"event": "Wind Advisory"}},
+    ]}
+    out = parse_active_alerts(only_wind)
+    assert out["winter_storm_active"] is False
+    assert out["events"] == ["Wind Advisory"]
+
+
+def test_alerts_empty_is_safe():
+    out = parse_active_alerts({})
+    assert out == {"winter_storm_active": False, "events": []}

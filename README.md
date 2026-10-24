@@ -35,5 +35,18 @@ Things to verify in your Kiro version: hook trigger names (this repo uses `PostF
 3. **Download the .ics** and open it.
 4. **Kiro:** show requirement 5.2 → design → task 6.6 → the property test, and one hook firing.
 
+## Contributing / File ownership
+
+To avoid merge conflicts during the build, **each person edits only their own files**, and we **merge to `main` at every checkpoint** (CP1–CP4 in `tasks.md`). Everyone codes against `src/contract.py`; don't change its return shapes without telling the team.
+
+| Owner | Files |
+|---|---|
+| A: Road network & data | `src/twin/network.py`, `src/twin/hospitals.py`, `src/adapters/*`, `data/cache/` |
+| B: Simulation logic | `src/sim/*`, `src/contract.py`, `tests/sim/*` |
+| C: UI & map | `app.py`, `src/outputs/map.py`, `src/outputs/ics.py` |
+| D: Parameters & demo | `config/params.py`, `config/scenarios.py`, `.kiro/steering/*`, `README.md`, `src/outputs/messages.py`, demo script |
+
+Full rationale is in `.kiro/specs/longwood-storm-twin/design.md` under "File ownership".
+
 ## Never commit
 `.env`, `data/cache/`, real personal data.

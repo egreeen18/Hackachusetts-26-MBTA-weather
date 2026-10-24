@@ -9,7 +9,6 @@ without waiting for the real simulator.
 """
 from __future__ import annotations
 
-import random
 from typing import TypedDict
 
 
@@ -73,40 +72,39 @@ DEFAULT_SCENARIO: Scenario = {
 }
 
 
-# ---------------------------------------------------------------- stubs (B replaces)
+# ---------------------------------------------------------------- real impl (B)
 
 def run_simulation(scenario: Scenario, hour: int) -> SimResult:
-    rng = random.Random(int(scenario.get("snow_inches", 0) * 100 + hour))
-    origins: list[OriginResult] = []
-    for i in range(50):
-        m = rng.uniform(5, 15) + scenario.get("snow_inches", 0) * rng.uniform(0.5, 2.5)
-        origins.append({
-            "node": i, "lat": 42.33 + rng.random() * 0.02, "lon": -71.115 + rng.random() * 0.03,
-            "minutes_to_hospital": m, "nearest_hospital": "Brigham and Women's Hospital",
-            "broken": m > 30,
-        })
-    broken = sum(o["broken"] for o in origins)
-    return {
-        "hour": hour,
-        "edges": [],
-        "origins": origins,
-        "kpis": {
-            "pct_broken": 100 * broken / len(origins),
-            "avg_minutes_to_hospital": sum(o["minutes_to_hospital"] for o in origins) / len(origins),
-            "n_unreachable": 0,
-        },
-        "label": "simulation estimate",
-    }
+    """Real simulator (task 6.3). The heavy logic lives in src/sim/simulate.py
+    so this file stays the single source of truth for the return shapes above.
+
+    Imported lazily to avoid a circular import: simulate.py depends on the
+    TypedDicts defined in this module.
+    """
+    from src.sim.simulate import run_simulation as _run_simulation
+    return _run_simulation(scenario, hour)
 
 
 def sweep_snow(scenario: Scenario, hour: int | None = None,
                max_inches: int = 30, step: int = 2) -> dict[int, float | None]:
     """node -> first snowfall (inches) at which that origin breaks; None = never breaks
-    up to max_inches. `hour` defaults to start_hour + duration_hours (end of storm)."""
-    return {i: random.Random(i).choice([None, 8, 12, 16, 20, 24]) for i in range(50)}
+    up to max_inches. `hour` defaults to start_hour + duration_hours (end of storm).
+
+    Real sweep (task 10.1). The heavy logic lives in src/sim/simulate.py so this
+    file stays the single source of truth for the return shape. Imported lazily
+    to avoid a circular import (simulate.py depends on this module's TypedDicts).
+    """
+    from src.sim.simulate import sweep_snow as _sweep_snow
+    return _sweep_snow(scenario, hour, max_inches, step)
 
 
 def trip_time(origin: tuple[float, float], dest: tuple[float, float],
               scenario: Scenario, hour: int) -> TripResult:
-    return {"minutes": 28.0, "clear_day_minutes": 12.0, "broken": False,
-            "leave_earlier_by_min": 16.0, "route_nodes": [], "warnings": []}
+    """Storm vs clear-day trip from origin to dest (task 10.2, Requirement 16.3).
+
+    The heavy routing lives in src/sim/simulate.py so this file stays the single
+    source of truth for TripResult's shape. Imported lazily to avoid a circular
+    import (simulate.py depends on this module's TypedDicts).
+    """
+    from src.sim.simulate import trip_time as _trip_time
+    return _trip_time(origin, dest, scenario, hour)

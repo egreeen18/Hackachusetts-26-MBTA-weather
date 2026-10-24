@@ -1,0 +1,70 @@
+{
+  "_note": "Representative sample of a NWS /alerts/active GeoJSON response for the Longwood study-area point (42.3378,-71.1050), matching the real api.weather.gov shape and the fields the boston-civic MCP nws_alerts tool reads (event, severity, headline, onset, ends). Synthetic winter-storm example; not a live capture. Supplements nws_grid.json (forecastGridData) which A's parse_storm_inputs tests load.",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.winterstorm.example.1",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.winterstorm.example.1",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.winterstorm.example.1",
+        "areaDesc": "Suffolk MA; Eastern Norfolk MA",
+        "sent": "2026-01-11T16:00:00-05:00",
+        "effective": "2026-01-11T16:00:00-05:00",
+        "onset": "2026-01-12T01:00:00-05:00",
+        "expires": "2026-01-12T21:00:00-05:00",
+        "ends": "2026-01-12T20:00:00-05:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Likely",
+        "urgency": "Expected",
+        "event": "Winter Storm Warning",
+        "senderName": "NWS Boston MA",
+        "headline": "Winter Storm Warning issued January 11 at 4:00PM EST until January 12 at 8:00PM EST by NWS Boston MA",
+        "description": "Heavy snow expected. Total snow accumulations of 8 to 12 inches. Winds gusting as high as 35 mph.",
+        "instruction": "Travel could be very difficult. The hazardous conditions could impact the morning commute.",
+        "parameters": {
+          "NWSheadline": ["WINTER STORM WARNING IN EFFECT FROM 1 AM TO 8 PM EST MONDAY"],
+          "snowfall": ["8 to 12 inches"],
+          "maxWindGust": ["35 mph"]
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.windadvisory.example.2",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.windadvisory.example.2",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.windadvisory.example.2",
+        "areaDesc": "Suffolk MA",
+        "sent": "2026-01-11T16:05:00-05:00",
+        "effective": "2026-01-11T16:05:00-05:00",
+        "onset": "2026-01-12T04:00:00-05:00",
+        "expires": "2026-01-12T18:00:00-05:00",
+        "ends": "2026-01-12T18:00:00-05:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Moderate",
+        "certainty": "Likely",
+        "urgency": "Expected",
+        "event": "Wind Advisory",
+        "senderName": "NWS Boston MA",
+        "headline": "Wind Advisory issued January 11 at 4:05PM EST until January 12 at 6:00PM EST by NWS Boston MA",
+        "description": "North winds 20 to 30 mph with gusts up to 45 mph expected.",
+        "instruction": "Use extra caution when driving, especially if operating a high profile vehicle.",
+        "parameters": {
+          "maxWindGust": ["45 mph"]
+        }
+      }
+    }
+  ],
+  "title": "Current watches, warnings, and advisories for 42.3378 N, 71.105 W",
+  "updated": "2026-01-11T16:10:00-05:00"
+}

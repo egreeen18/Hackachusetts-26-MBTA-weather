@@ -1,0 +1,38 @@
+[
+  {
+    "key": "regular_heavy_snow",
+    "label": "Regular heavy snow",
+    "view_hour": 13,
+    "pct_broken": 2.0,
+    "avg_minutes_to_hospital": 3.1,
+    "n_unreachable": 12,
+    "n_origins": 609,
+    "n_never_break": 3,
+    "hospital_html": "regular_heavy_snow_hospital.html",
+    "breaking_point_html": "regular_heavy_snow_breaking_point.html"
+  },
+  {
+    "key": "rush_hour_blizzard",
+    "label": "Rush-hour blizzard",
+    "view_hour": 8,
+    "pct_broken": 2.0,
+    "avg_minutes_to_hospital": 5.4,
+    "n_unreachable": 12,
+    "n_origins": 609,
+    "n_never_break": 3,
+    "hospital_html": "rush_hour_blizzard_hospital.html",
+    "breaking_point_html": "rush_hour_blizzard_breaking_point.html"
+  },
+  {
+    "key": "blizzard_e_suspended",
+    "label": "Blizzard + E branch suspended",
+    "view_hour": 8,
+    "pct_broken": 2.0,
+    "avg_minutes_to_hospital": 5.5,
+    "n_unreachable": 12,
+    "n_origins": 609,
+    "n_never_break": 3,
+    "hospital_html": "blizzard_e_suspended_hospital.html",
+    "breaking_point_html": "blizzard_e_suspended_breaking_point.html"
+  }
+]

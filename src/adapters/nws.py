@@ -82,6 +82,46 @@ def _parse_valid_time(valid_time: str) -> tuple[datetime, float]:
     return start, hours
 
 
+# ------------------------------------------------------------------ active alerts
+
+# Event names (NWS 'event' field) that confirm a winter-storm product is active.
+# Requirement 8.3: convert winter-storm and high-wind products into inputs.
+WINTER_STORM_EVENTS = (
+    "blizzard warning",
+    "winter storm warning",
+    "winter storm watch",
+    "ice storm warning",
+    "snow squall warning",
+    "winter weather advisory",
+    "lake effect snow warning",
+    "lake effect snow advisory",
+)
+
+
+def parse_active_alerts(alerts_geojson: dict) -> dict:
+    """Pure function: NWS /alerts/active FeatureCollection -> winter-storm summary.
+
+    Returns a small dict used to confirm/annotate the gridded forecast:
+        {"winter_storm_active": bool, "events": [str, ...]}
+
+    'winter_storm_active' is True when any active feature's 'event' matches a
+    known winter-storm product (see WINTER_STORM_EVENTS). Wind-only products
+    (e.g. Wind Advisory) do not set it. Safe on empty/missing input.
+    """
+    features = alerts_geojson.get("features", []) or []
+    events: list[str] = []
+    for feat in features:
+        props = feat.get("properties", {}) or {}
+        event = props.get("event")
+        if event:
+            events.append(event)
+
+    winter_storm_active = any(
+        ev.strip().lower() in WINTER_STORM_EVENTS for ev in events
+    )
+    return {"winter_storm_active": winter_storm_active, "events": events}
+
+
 # ------------------------------------------------------------------ pure parser
 
 def parse_storm_inputs(grid_props: dict, tz_offset_hours: int = -5) -> dict:
@@ -142,6 +182,18 @@ def _fetch_grid_props(lat: float, lon: float) -> dict:
     return g.json()["properties"]
 
 
+def _fetch_active_alerts(lat: float, lon: float) -> dict:
+    """Fetch /alerts/active for the point. Confirmatory only; never required."""
+    a = httpx.get(
+        f"{NWS}/alerts/active",
+        params={"point": f"{lat},{lon}"},
+        headers=_nws_headers(),
+        timeout=TIMEOUT,
+    )
+    a.raise_for_status()
+    return parse_active_alerts(a.json())
+
+
 def _save_snapshot(inputs: dict, fetched_at: str) -> None:
     try:
         SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
@@ -179,8 +231,18 @@ def nws_storm_inputs(lat: float = LONGWOOD_LAT, lon: float = LONGWOOD_LON) -> tu
         inputs = parse_storm_inputs(props)
         fetched_at = datetime.now(timezone.utc).isoformat()
         inputs["stale_since"] = None
-        log.info("nws forecast ok: snow_inches=%s start_hour=%s duration_hours=%s",
-                 inputs["snow_inches"], inputs["start_hour"], inputs["duration_hours"])
+        # Active alerts are confirmatory (Requirement 8.3); never fatal.
+        try:
+            alerts = _fetch_active_alerts(lat, lon)
+            inputs["winter_storm_active"] = alerts["winter_storm_active"]
+        except (httpx.HTTPError, ValueError, KeyError) as e:
+            log.warning("nws alerts failed (%s); forecast kept without confirmation",
+                        e.__class__.__name__)
+            inputs["winter_storm_active"] = None
+        log.info("nws forecast ok: snow_inches=%s start_hour=%s duration_hours=%s "
+                 "winter_storm_active=%s",
+                 inputs["snow_inches"], inputs["start_hour"], inputs["duration_hours"],
+                 inputs["winter_storm_active"])
         _save_snapshot(inputs, fetched_at)
         return inputs, fetched_at
     except (httpx.HTTPError, ValueError, KeyError) as e:

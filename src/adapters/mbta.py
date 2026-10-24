@@ -28,6 +28,7 @@ import httpx
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SNAPSHOT_DIR = PROJECT_ROOT / "data" / "snapshots"
 MBTA_SNAPSHOT = SNAPSHOT_DIR / "mbta_flags_latest.json"
+TRANSIT_STOPS_CACHE = PROJECT_ROOT / "data" / "cache" / "transit_stops.json"
 
 MBTA = "https://api-v3.mbta.com"
 TIMEOUT = 10.0
@@ -43,6 +44,22 @@ log = logging.getLogger("adapters.mbta")
 def _mbta_headers() -> dict[str, str]:
     key = os.environ.get("MBTA_API_KEY")
     return {"x-api-key": key} if key else {}
+
+
+def _study_area_stops() -> set[str] | None:
+    """Load the study-area stop ids from the transit cache (task 5.1 output).
+
+    Returns the set of stop ids inside the bounding box, so elevator closures at
+    out-of-area stops are excluded (Requirement 8.2). Returns None if the cache
+    is missing or unreadable, in which case no stop filter is applied and the
+    caller falls back to collecting every closure.
+    """
+    try:
+        obj = json.loads(TRANSIT_STOPS_CACHE.read_text(encoding="utf-8"))
+        stops = {s["id"] for s in obj.get("stops", []) if s.get("id")}
+        return stops or None
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
 
 
 # ------------------------------------------------------------------ parsing
@@ -130,11 +147,17 @@ def mbta_flags(study_area_stops: set[str] | None = None) -> tuple[dict, str]:
         {"green_e_suspended": bool, "elevators_out": [stop_id, ...],
          "stale_since": <iso8601> | None}
 
+    When study_area_stops is not given, the study-area stop ids are loaded from
+    data/cache/transit_stops.json (task 5.1) so elevator closures at out-of-area
+    stops are excluded (Requirement 8.2).
+
     On any network/parse failure, falls back to the last saved snapshot and sets
     stale_since to that snapshot's timestamp. If there is no snapshot either,
     returns empty flags with stale_since = now so the UI can say "no live data".
     Never raises.
     """
+    if study_area_stops is None:
+        study_area_stops = _study_area_stops()
     try:
         alerts = _fetch_alerts()
         flags = parse_flags(alerts, study_area_stops)

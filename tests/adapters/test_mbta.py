@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.adapters.mbta import parse_flags
+from src.adapters.mbta import _study_area_stops, parse_flags
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 
@@ -66,3 +66,22 @@ def test_shuttle_effect_also_suspends_e():
         }
     }]
     assert parse_flags(alerts)["green_e_suspended"] is True
+
+
+def test_study_area_stops_loaded_from_transit_cache():
+    # mbta_flags() defaults its filter to these stop ids (task 5.1 output).
+    stops = _study_area_stops()
+    assert stops is not None
+    assert "place-longw" in stops
+    assert "place-brmnl" in stops
+    # The out-of-area stop used in the fixture is not in the study-area cache,
+    # so default filtering excludes it (Requirement 8.2).
+    assert "place-alfcl" not in stops
+
+
+def test_default_study_area_filter_excludes_out_of_area_stop():
+    # Applying the cached study-area set to the fixture drops place-alfcl.
+    flags = parse_flags(_load_alerts(), study_area_stops=_study_area_stops())
+    assert "place-alfcl" not in flags["elevators_out"]
+    assert "place-longw" in flags["elevators_out"]
+    assert "place-brmnl" in flags["elevators_out"]

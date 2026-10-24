@@ -20,12 +20,26 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import folium
 import streamlit as st
 from streamlit_folium import st_folium
 
-from config.params import BBOX
-from src.contract import Scenario, SimResult, run_simulation
+from config.scenarios import SCENARIOS
+from src.contract import Scenario, SimResult, run_simulation, sweep_snow
+from src.outputs.map import (
+    build_breaking_point_map,
+    build_city_map,
+    count_broken_by,
+    join_sweep_with_origins,
+    precompute_edge_geometry,
+)
+
+# Dropdown sentinel for the hand-tuned sliders path (no preset selected).
+CUSTOM_PRESET_LABEL = "Custom (use sliders)"
+
+# Cap on how many origin dots the city map draws (display only; the simulator
+# still computes KPIs over every origin). Keeps the Folium map responsive while
+# the user drags the snowfall slider. See src/outputs/map.py.
+MAP_MAX_ORIGINS = 300
 
 if TYPE_CHECKING:
     import networkx as nx
@@ -35,46 +49,12 @@ if TYPE_CHECKING:
 GRAPH_CACHE = Path(__file__).resolve().parent / "data" / "cache" / "drive.graphml"
 
 
-# --------------------------------------------------------------------------- color helpers
-
-# Anchor colors for capacity interpolation: 1.0 = green, 0.5 = yellow, 0.0 = black
-_CAP_ANCHORS = [
-    (1.0, (0x2E, 0xCC, 0x40)),   # green
-    (0.5, (0xFF, 0xD7, 0x00)),   # gold / yellow
-    (0.0, (0x1A, 0x1A, 0x1A)),   # near-black
-]
-
-
-def _capacity_color(cap: float) -> str:
-    """Map a capacity factor (0..1) to a hex color.
-
-    1.0 -> green, 0.5 -> yellow, 0.0 -> near-black (closed).
-    """
-    cap = max(0.0, min(1.0, cap))
-    for i in range(len(_CAP_ANCHORS) - 1):
-        hi, hc = _CAP_ANCHORS[i]
-        lo, lc = _CAP_ANCHORS[i + 1]
-        if lo <= cap <= hi:
-            t = (cap - lo) / (hi - lo) if hi > lo else 0.0
-            r = int(lc[0] + t * (hc[0] - lc[0]))
-            g = int(lc[1] + t * (hc[1] - lc[1]))
-            b = int(lc[2] + t * (hc[2] - lc[2]))
-            return f"#{r:02x}{g:02x}{b:02x}"
-    return "#1a1a1a"
-
-
-def _origin_color(minutes: float) -> str:
-    """Origin-dot color by minutes to the nearest hospital."""
-    if minutes == float("inf"):
-        return "#1a1a1a"   # dark — unreachable
-    if minutes <= 15:
-        return "#2ecc40"   # green
-    if minutes <= 30:
-        return "#ff8c00"   # orange
-    return "#ff4136"       # red
-
-
 # --------------------------------------------------------------------------- graph + map
+#
+# The map-building and colour logic lives in ``src/outputs/map.py`` (the C-owned
+# module named in design.md's file-ownership table). ``build_city_map`` is
+# imported above; later tasks (11.1 breaking-point map, 17 my-trip map) extend
+# that module rather than this file.
 
 
 @st.cache_resource
@@ -94,99 +74,34 @@ def load_drive_graph() -> Any:
         return None
 
 
-def _edge_coords(graph: Any, u: int, v: int, data: dict) -> list[tuple[float, float]]:
-    """Extract ``(lat, lon)`` points along an edge, using its geometry if present."""
-    if "geometry" in data:
-        geom = data["geometry"]
-        try:
-            if hasattr(geom, "geoms"):          # MultiLineString
-                return [(pt[1], pt[0]) for part in geom.geoms for pt in part.coords]
-            if hasattr(geom, "coords"):          # LineString
-                return [(pt[1], pt[0]) for pt in geom.coords]
-        except Exception:
-            pass
-    # Fall back to the two endpoint nodes.
-    nu, nv = graph.nodes[u], graph.nodes[v]
-    return [(nu["y"], nu["x"]), (nv["y"], nv["x"])]
+@st.cache_resource
+def load_edge_geometry(_graph: Any) -> Any:
+    """Precompute the per-edge map polylines once and cache them for the session.
 
+    The geometry (each road's ``(lat, lon)`` shape) never changes with the
+    scenario — only the colour does — so building it on every slider move is pure
+    waste. Caching it with ``st.cache_resource`` means it is computed once per
+    loaded graph; ``build_city_map`` then just recolours those shapes per run.
 
-def _add_legend(m: folium.Map) -> None:
-    """Overlay an HTML legend explaining origin-dot and road colors."""
-    legend = folium.Element(
-        """
-        <div style="position: fixed; bottom: 30px; left: 30px; z-index: 1000;
-                    background: rgba(255,255,255,0.92); padding: 10px 14px;
-                    border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-                    font-size: 12px; font-family: Arial, sans-serif; line-height: 1.6;">
-          <div style="font-weight: bold; margin-bottom: 4px;">Minutes to hospital</div>
-          <div><span style="color:#2ecc40;">&#9679;</span> &le; 15 min</div>
-          <div><span style="color:#ff8c00;">&#9679;</span> 15&ndash;30 min</div>
-          <div><span style="color:#ff4136;">&#9679;</span> &gt; 30 min</div>
-          <div><span style="color:#1a1a1a;">&#9679;</span> Unreachable</div>
-          <div style="margin-top: 8px; font-weight: bold; margin-bottom: 4px;">Roads</div>
-          <div><span style="color:#2ecc40;">&#9472;</span> Normal</div>
-          <div><span style="color:#ffd700;">&#9472;</span> Reduced</div>
-          <div><span style="color:#1a1a1a;">&#9472;</span> Closed</div>
-        </div>
-        """
-    )
-    m.get_root().html.add_child(legend)
-
-
-def build_city_map(result: SimResult, graph: Any) -> folium.Map:
-    """Build a Folium map of the study area with roads and origin dots.
-
-    Roads are drawn only when ``graph`` is not ``None`` (GraphML cache exists).
-    Origin dots always render from the simulation results (Requirement 11.4).
+    The parameter is named ``_graph`` so Streamlit skips trying to hash the graph
+    (it is already a cached resource); identity is what matters.
     """
-    center_lat = (BBOX["north"] + BBOX["south"]) / 2
-    center_lon = (BBOX["east"] + BBOX["west"]) / 2
-    m = folium.Map(
-        location=[center_lat, center_lon],
-        zoom_start=14,
-        tiles="OpenStreetMap",
-    )
+    return precompute_edge_geometry(_graph)
 
-    # --- Roads (only if the cached graph is available) ---
-    if graph is not None:
-        cap_lookup: dict[tuple[int, int, int], float] = {
-            (e["u"], e["v"], e["key"]): e["capacity_factor"]
-            for e in result["edges"]
-        }
-        for u, v, key, data in graph.edges(keys=True, data=True):
-            cap = cap_lookup.get((u, v, key), 1.0)  # default: normal
-            color = _capacity_color(cap)
-            coords = _edge_coords(graph, u, v, data)
-            if len(coords) >= 2:
-                folium.PolyLine(
-                    locations=coords,
-                    color=color,
-                    weight=3 if cap > 0 else 1,
-                    opacity=0.7,
-                    popup=f"Capacity: {cap:.0%}",
-                ).add_to(m)
 
-    # --- Origin dots (always rendered from simulation results) ---
-    for origin in result["origins"]:
-        minutes = origin["minutes_to_hospital"]
-        color = _origin_color(minutes)
-        hospital = origin.get("nearest_hospital") or "unknown"
-        if minutes == float("inf"):
-            tip = "Unreachable from any hospital"
-        else:
-            tip = f"{minutes:.0f} min to {hospital}"
-        folium.CircleMarker(
-            location=[origin["lat"], origin["lon"]],
-            radius=5,
-            color=color,
-            fill=True,
-            fill_color=color,
-            fill_opacity=0.8,
-            tooltip=tip,
-        ).add_to(m)
+@st.cache_data(show_spinner="Running the breaking-point sweep (0-30 in)...")
+def run_sweep(scenario_items: tuple) -> dict:
+    """Cached ``sweep_snow`` keyed on the scenario contents.
 
-    _add_legend(m)
-    return m
+    The sweep runs the simulator 16 times (0-30 in in 2-in steps), so it is far
+    too slow to redo on every rerun. Streamlit's ``cache_data`` memoises it on
+    the scenario, so it only recomputes when the user changes the scenario
+    (via sliders or a preset). The scenario is passed as a sorted tuple of
+    ``(key, value)`` pairs because a dict isn't hashable (and ``elevators_out``
+    is turned into a tuple inside).
+    """
+    scenario: Scenario = dict(scenario_items)  # type: ignore[assignment]
+    return sweep_snow(scenario)
 
 
 # --------------------------------------------------------------------------- scenario helpers
@@ -258,53 +173,103 @@ def main() -> None:
     # --- Sidebar: scenario controls ------------------------------------------
     st.sidebar.header("Storm scenario")
 
+    # Preset dropdown (task 11.1): one of D's demo scenarios, or "Custom" to drive
+    # the sliders by hand. When a preset is picked, its contract-shaped scenario
+    # and default view-hour override the sliders below (the sliders still show,
+    # pre-filled, so the user can see what the preset chose and then switch to
+    # Custom to tweak).
+    preset_labels = [CUSTOM_PRESET_LABEL] + [p["label"] for p in SCENARIOS.values()]
+    # Map label -> preset key for lookup after selection.
+    label_to_key = {p["label"]: key for key, p in SCENARIOS.items()}
+    chosen_label = st.sidebar.selectbox(
+        "Preset scenario",
+        options=preset_labels,
+        index=0,
+        help="Pick one of the demo scenarios, or keep Custom to set the sliders "
+        "yourself. A preset fills in the sliders and the view hour for you.",
+    )
+    active_preset = (
+        SCENARIOS[label_to_key[chosen_label]]
+        if chosen_label != CUSTOM_PRESET_LABEL
+        else None
+    )
+    if active_preset is not None:
+        st.sidebar.caption(active_preset["blurb"])
+
+    # Preset values seed the slider defaults; Custom falls back to the originals.
+    if active_preset is not None:
+        ps = active_preset["scenario"]
+        default_snow = float(ps["snow_inches"])
+        default_start = int(ps["start_hour"])
+        default_duration = int(ps["duration_hours"])
+        default_parking = float(ps["parking_compliance"])
+        default_e = bool(ps["green_e_suspended"])
+        default_view = int(active_preset["view_hour"])
+    else:
+        default_snow, default_start, default_duration = 14.0, 7, 10
+        default_parking, default_e, default_view = 0.6, False, 8
+
+    # When a preset is active its values drive the scenario directly; the sliders
+    # are disabled so it's clear the preset is in charge (switch to Custom to edit).
+    sliders_disabled = active_preset is not None
+
     snow_inches = st.sidebar.slider(
         "Snowfall (inches)",
         min_value=0.0,
         max_value=30.0,
-        value=14.0,
+        value=default_snow,
         step=0.5,
         help="Total storm snowfall, spread evenly over the duration.",
+        disabled=sliders_disabled,
     )
     start_hour = st.sidebar.slider(
         "Start hour",
         min_value=0,
         max_value=23,
-        value=7,
+        value=default_start,
         step=1,
         help="Hour of day the snow begins (0-23).",
+        disabled=sliders_disabled,
     )
     duration_hours = st.sidebar.slider(
         "Duration (hours)",
         min_value=1,
         max_value=24,
-        value=10,
+        value=default_duration,
         step=1,
         help="Length of the storm; snow is spread evenly over this window.",
+        disabled=sliders_disabled,
     )
     hour_to_view = st.sidebar.slider(
         "Hour to view",
         min_value=0,
         max_value=23,
-        value=8,
+        value=default_view,
         step=1,
         help="Hour of day at which to evaluate conditions on the map.",
+        disabled=sliders_disabled,
     )
     parking_compliance = st.sidebar.slider(
         "Cars moved off priority routes",
         min_value=0.0,
         max_value=1.0,
-        value=0.6,
+        value=default_parking,
         step=0.05,
         format="%.0f%%",
         help="Share of cars moved off snow-emergency routes. Lower compliance "
         "cuts priority-route capacity and plowing effectiveness.",
+        disabled=sliders_disabled,
     )
     green_e_suspended = st.sidebar.checkbox(
         "Green Line E suspended",
-        value=False,
+        value=default_e,
         help="E branch down pushes more cars onto Huntington Avenue.",
+        disabled=sliders_disabled,
     )
+
+    # A disabled slider still returns its default, so whether a preset is active
+    # or not, the variables above already hold the right values to build the
+    # scenario from. (When disabled, they equal the preset; otherwise the user's.)
 
     # --- Build the scenario and run the simulator ----------------------------
     scenario = build_scenario(
@@ -322,6 +287,7 @@ def main() -> None:
     tab_city, tab_trips = st.tabs(["City view", "My trips"])
 
     with tab_city:
+        # KPI cards always sit on top of the map, in both views (Requirement 15.3).
         render_kpi_cards(result)
 
         # Small scenario recap so the numbers always have context.
@@ -333,21 +299,81 @@ def main() -> None:
             recap += " - Green Line E suspended"
         st.caption(recap)
 
-        # --- Folium map (Requirement 11.4) -----------------------------------
-        st.subheader("Hospital access map")
+        # --- Map-mode toggle: hospital access vs breaking point --------------
+        map_mode = st.radio(
+            "Map view",
+            options=["Hospital access", "Breaking point"],
+            horizontal=True,
+            help="Hospital access shows minutes to the nearest hospital at the "
+            "chosen hour. Breaking point sweeps snowfall 0-30 in and colours "
+            "each origin by how much snow it takes to cut it off.",
+        )
 
         # The road graph is loaded once and cached (task 1.1 creates the
         # GraphML; until then the map renders origins only).
         graph = load_drive_graph()
-        city_map = build_city_map(result, graph)
-        st_folium(city_map, width=800, height=500, returned_objects=[])
+        # Geometry is built once and cached; each slider move only recolours it.
+        edge_geometry = load_edge_geometry(graph) if graph is not None else None
 
-        if graph is None:
-            st.caption(
-                "Road network not loaded yet — the GraphML cache is created "
-                "in task 1.1. Origin dots are shown from the simulation results."
+        if map_mode == "Hospital access":
+            # --- Hospital-access map (Requirement 11.4) ----------------------
+            st.subheader("Hospital access map")
+            city_map = build_city_map(
+                result,
+                graph,
+                edge_geometry=edge_geometry,
+                max_origins=MAP_MAX_ORIGINS,
             )
-        st.caption(f"{len(result['origins'])} origins simulated · simulation estimate")
+            st_folium(city_map, width=800, height=500, returned_objects=[])
+
+            if graph is None:
+                st.caption(
+                    "Road network not loaded yet — the GraphML cache is created "
+                    "in task 1.1. Origin dots are shown from the simulation results."
+                )
+            st.caption(
+                f"{len(result['origins'])} origins simulated · simulation estimate"
+            )
+        else:
+            # --- Breaking-point map (Requirements 15.4, 15.3, 11.4) ----------
+            st.subheader("Breaking-point map")
+            st.caption(
+                "Each origin is coloured by how much snow it takes to cut it off "
+                "from every hospital (red = fragile, green = robust, grey = never "
+                "breaks up to 30 in). Simulation estimate."
+            )
+            # The sweep is scenario-dependent but hour-independent (it sweeps
+            # snowfall itself), so it's cached on the scenario contents.
+            sweep_key = tuple(sorted(
+                (k, tuple(v) if isinstance(v, list) else v)
+                for k, v in scenario.items()
+            ))
+            sweep_result = run_sweep(sweep_key)
+            origins_break = join_sweep_with_origins(sweep_result, result)
+
+            break_map = build_breaking_point_map(
+                origins_break,
+                graph,
+                edge_geometry=edge_geometry,
+                max_origins=MAP_MAX_ORIGINS,
+            )
+            st_folium(break_map, width=800, height=500, returned_objects=[])
+
+            # Honest, labelled summary (Requirement 7.4). "by X in" uses the
+            # current snowfall slider so the number tracks the scenario on screen.
+            summary_inches = float(snow_inches)
+            n_break = count_broken_by(origins_break, summary_inches)
+            n_never = sum(1 for o in origins_break if o["inches_to_break"] is None)
+            if graph is None:
+                st.caption(
+                    "Road network not loaded yet — the GraphML cache is created "
+                    "in task 1.1. Origin dots are shown from the sweep results."
+                )
+            st.caption(
+                f"{n_break} of {len(origins_break)} origins break by "
+                f"{summary_inches:.0f} in · {n_never} never break up to 30 in · "
+                "simulation estimate"
+            )
 
     with tab_trips:
         st.subheader("My trips")

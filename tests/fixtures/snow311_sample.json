@@ -1,0 +1,16 @@
+{
+  "_note": "SAMPLE DATA ONLY - not real Analyze Boston 311 records. A small, representative set of snow/plow 311 requests inside the study-area bbox for a past Boston blizzard, used to demo/validate src/validation/snow311.py (Requirement 14.1) offline. Replace with a real CKAN snapshot for actual validation.",
+  "_source": "shape mirrors Analyze Boston 311 (CKAN) 'service requests' rows",
+  "records": [
+    {"case_title": "Snow Plowing", "street_name": "Huntington Ave", "latitude": 42.337, "longitude": -71.102, "open_dt": "2022-01-29T08:12:00"},
+    {"case_title": "Snow Plowing", "street_name": "Huntington Ave", "latitude": 42.338, "longitude": -71.101, "open_dt": "2022-01-29T09:40:00"},
+    {"case_title": "Snow/Ice Removal", "street_name": "Huntington Ave", "latitude": 42.337, "longitude": -71.103, "open_dt": "2022-01-30T07:05:00"},
+    {"case_title": "Snow Plowing", "street_name": "Longwood Ave", "latitude": 42.339, "longitude": -71.106, "open_dt": "2022-01-29T10:22:00"},
+    {"case_title": "Snow/Ice Removal", "street_name": "Longwood Ave", "latitude": 42.340, "longitude": -71.107, "open_dt": "2022-01-30T11:15:00"},
+    {"case_title": "Snow Plowing", "street_name": "Tremont St", "latitude": 42.333, "longitude": -71.090, "open_dt": "2022-01-29T12:48:00"},
+    {"case_title": "Request for Snow Plowing", "street_name": "Ruggles St", "latitude": 42.335, "longitude": -71.089, "open_dt": "2022-01-30T06:30:00"},
+    {"case_title": "Pothole Repair", "street_name": "Huntington Ave", "latitude": 42.337, "longitude": -71.102, "open_dt": "2022-01-31T14:00:00"},
+    {"case_title": "Snow Plowing", "street_name": "Hemenway St", "latitude": 42.345, "longitude": -71.088, "open_dt": "2022-01-29T15:10:00"},
+    {"case_title": "Snow Plowing", "street_name": "Alewife Brook Pkwy", "latitude": 42.395, "longitude": -71.140, "open_dt": "2022-01-29T16:00:00"}
+  ]
+}

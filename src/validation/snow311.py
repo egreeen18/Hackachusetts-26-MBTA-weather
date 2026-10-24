@@ -25,11 +25,13 @@ from pathlib import Path
 
 import httpx
 
-from config.params import BBOX
+from config.params import BBOX, PRIORITY_ROUTES
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SNAPSHOT_DIR = PROJECT_ROOT / "data" / "snapshots"
 SNOW311_SNAPSHOT = SNAPSHOT_DIR / "snow311_latest.json"
+# Small, clearly-marked sample for offline/demo use (see the file's _note).
+SAMPLE_FIXTURE = PROJECT_ROOT / "tests" / "fixtures" / "snow311_sample.json"
 
 CKAN = "https://data.boston.gov/api/3/action/datastore_search_sql"
 TIMEOUT = 10.0
@@ -94,7 +96,94 @@ def _street_from_location(location: str | None) -> str | None:
     return " ".join(parts) or None
 
 
+# ------------------------------------------------------------------ overlap (Req 14.1)
+
+# Street-type suffixes get collapsed to a canonical form so the two data sources
+# match ("Huntington Ave" from 311 vs "Huntington Avenue" from OSM edge names).
+_SUFFIX_CANON = {
+    "ave": "ave", "avenue": "ave",
+    "st": "st", "street": "st",
+    "rd": "rd", "road": "rd",
+    "dr": "dr", "drive": "dr",
+    "pkwy": "pkwy", "parkway": "pkwy",
+    "blvd": "blvd", "boulevard": "blvd",
+    "ln": "ln", "lane": "ln",
+    "pl": "pl", "place": "pl",
+    "ct": "ct", "court": "ct",
+    "sq": "sq", "square": "sq",
+    "ter": "ter", "terrace": "ter",
+    "hwy": "hwy", "highway": "hwy",
+}
+
+
+def _norm_street(name: str) -> str:
+    """Normalize a street name so '311' labels and generator edge names match.
+
+    Lowercases, collapses whitespace, strips punctuation, and canonicalizes the
+    trailing street-type suffix ('Avenue' -> 'ave', 'Street' -> 'st', ...).
+    """
+    cleaned = "".join(c if c.isalnum() or c.isspace() else " " for c in (name or ""))
+    parts = cleaned.lower().split()
+    if parts and parts[-1] in _SUFFIX_CANON:
+        parts[-1] = _SUFFIX_CANON[parts[-1]]
+    return " ".join(parts)
+
+
+def overlap_with_slowed_streets(
+    complaint_streets: list[dict],
+    slowed_streets: list[str],
+    top_n: int = 10,
+) -> dict:
+    """Compare 311 snow-complaint clusters with the streets the storm generator
+    slows most, and report the overlap. (Requirement 14.1)
+
+    This is the validation metric. It is pure and takes the generator's slowed
+    streets as input (the caller reads them off the simulated edges by name), so
+    this module never imports the simulator and never feeds routing.
+
+    Args:
+        complaint_streets: output of ``summarize_by_street`` (descending by count).
+        slowed_streets: street names the generator slows most, most-slowed first.
+        top_n: how many streets from each side to compare.
+
+    Returns a dict with the two top lists, the overlapping street names, and a
+    Jaccard-style ``overlap_pct`` (shared / union of the two top-N sets).
+    """
+    top_complaints = [r["street"] for r in complaint_streets[:top_n]]
+    top_slowed = list(slowed_streets[:top_n])
+
+    comp_norm = {_norm_street(s): s for s in top_complaints}
+    slow_norm = {_norm_street(s): s for s in top_slowed}
+
+    shared_keys = [k for k in comp_norm if k in slow_norm]
+    overlap = [comp_norm[k] for k in shared_keys]
+    union = set(comp_norm) | set(slow_norm)
+    overlap_pct = round(100.0 * len(shared_keys) / len(union), 1) if union else 0.0
+
+    return {
+        "top_complaint_streets": top_complaints,
+        "top_slowed_streets": top_slowed,
+        "overlap": overlap,
+        "overlap_count": len(overlap),
+        "overlap_pct": overlap_pct,
+    }
+
+
 # ------------------------------------------------------------------ fetch
+
+def load_sample_records() -> list[dict]:
+    """Load the bundled SAMPLE 311 records (offline/demo). Returns [] if absent.
+
+    This is sample data, not real Analyze Boston output; it exists so the
+    validation layer and its overlap metric can be demonstrated without a live
+    CKAN call. Feed the result to ``summarize_by_street``.
+    """
+    try:
+        obj = json.loads(SAMPLE_FIXTURE.read_text(encoding="utf-8"))
+        return list(obj.get("records", []))
+    except (OSError, ValueError):
+        return []
+
 
 def _build_sql(date_start: str, date_end: str, limit: int = 2000) -> str:
     # Pull requests opened in the storm window; filter snow cases + bbox in
@@ -163,10 +252,24 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(name)s %(levelname)s %(message)s")
     # A past Boston blizzard: the late-Jan 2022 nor'easter.
     streets, fetched_at = snow_complaints_by_street("2022-01-29", "2022-02-02")
+    if not streets:
+        # Offline/demo: fall back to the bundled sample so the layer still
+        # shows something (clearly labeled as sample data).
+        print("(no live/snapshot data; using bundled SAMPLE fixture)")
+        streets = summarize_by_street(load_sample_records())
     print(f"fetched_at: {fetched_at}")
     print(f"streets with snow/plow 311 complaints in bbox: {len(streets)}")
     for row in streets[:15]:
         print(f"  {row['count']:4d}  {row['street']}")
+
+    # Validation (Req 14.1): overlap with the streets the generator slows most.
+    # The caller normally reads these off the simulated edges; here we use the
+    # bbox priority routes as a stand-in so the layer runs without the simulator.
+    report = overlap_with_slowed_streets(streets, PRIORITY_ROUTES)
+    print(f"\noverlap with most-slowed streets: {report['overlap_count']} "
+          f"({report['overlap_pct']}% of the combined top streets)")
+    for s in report["overlap"]:
+        print(f"  shared: {s}")
 
 
 if __name__ == "__main__":

@@ -24,7 +24,12 @@ CAPACITY_TABLE = [(0, 1.0), (2, 0.7), (4, 0.5), (8, 0.3), (12, 0.2), (30, 0.1)]
 SIDE_STREET_IMPASSABLE_IN = 12      # side streets with >= this much snow are closed
 
 # Free-flow speed in snow: speed multiplier = capacity_factor ** SPEED_EXPONENT
-SPEED_EXPONENT = 0.5
+# Tuned in task 8.2: at 0.5 a blizzard was only ~1.3x slower than a clear day
+# (snow barely registered); 1.75 brings typical blizzard hospital trips to a
+# median ~2.6x (p90 ~2.9x) slower -- inside the 2-4x sanity target -- while a
+# regular heavy snow stays ~1.5x. It never closes an edge (only capacity_factor
+# == 0 does that), so raising it cannot fragment the network.
+SPEED_EXPONENT = 1.75
 
 # Parked cars on priority routes (compliance = share moved)
 PARKED_CAPACITY_LOSS = 0.5          # capacity *= 1 - PARKED_CAPACITY_LOSS * (1 - compliance)
