@@ -1,0 +1,71 @@
+{
+  "_comment": "Synthetic review personas for the accessibility-reviewer agent (Requirement 13.2). No real names or addresses. Home points are generic study-area coordinates. Trip labels are place labels only, never a medical reason (Requirement 4.3). The agent config at .kiro/agents/accessibility-reviewer.json expects this exact path.",
+  "personas": [
+    {
+      "id": "persona-elder-stepfree",
+      "home": { "lat": 42.3387, "lon": -71.1012 },
+      "age_group": "65+",
+      "step_free": true,
+      "max_walk_m": 300,
+      "has_car": false,
+      "ride_budget_usd": 15.0,
+      "prefers_low_carbon": true,
+      "synthetic": true,
+      "trips": [
+        {
+          "id": "trip-elder-pharmacy",
+          "label": "Brigham pharmacy pickup",
+          "dest": { "lat": 42.3362, "lon": -71.1057 },
+          "arrive_by": "2025-01-15T10:00:00",
+          "recurrence": null,
+          "usual_mode": "transit",
+          "priority": "critical"
+        }
+      ]
+    },
+    {
+      "id": "persona-carfree-budget",
+      "home": { "lat": 42.3451, "lon": -71.0995 },
+      "age_group": "18-64",
+      "step_free": false,
+      "max_walk_m": 800,
+      "has_car": false,
+      "ride_budget_usd": 8.0,
+      "prefers_low_carbon": true,
+      "synthetic": true,
+      "trips": [
+        {
+          "id": "trip-budget-clinic",
+          "label": "Longwood clinic appointment",
+          "dest": { "lat": 42.3376, "lon": -71.1042 },
+          "arrive_by": "2025-01-15T09:30:00",
+          "recurrence": "FREQ=WEEKLY;BYDAY=WE",
+          "usual_mode": "transit",
+          "priority": "important"
+        }
+      ]
+    },
+    {
+      "id": "persona-younger-appointment",
+      "home": { "lat": 42.3418, "lon": -71.0908 },
+      "age_group": "18-64",
+      "step_free": false,
+      "max_walk_m": 1500,
+      "has_car": true,
+      "ride_budget_usd": 25.0,
+      "prefers_low_carbon": false,
+      "synthetic": true,
+      "trips": [
+        {
+          "id": "trip-younger-childrens",
+          "label": "Boston Children's front desk",
+          "dest": { "lat": 42.3375, "lon": -71.1053 },
+          "arrive_by": "2025-01-15T11:15:00",
+          "recurrence": null,
+          "usual_mode": "drive",
+          "priority": "important"
+        }
+      ]
+    }
+  ]
+}

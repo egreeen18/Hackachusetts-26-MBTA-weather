@@ -466,3 +466,176 @@ def count_broken_by(origins_break: list[dict], inches: float) -> int:
         if itb is not None and itb <= inches:
             n += 1
     return n
+
+
+# --------------------------------------------------------------------------- trip map (task 17, Requirements 11.1/11.2)
+
+# Colours for the "My trip" route map. The recommended route is drawn as a bold
+# blue line; home and destination get distinct marker colours so the two ends
+# read at a glance.
+TRIP_ROUTE_COLOR = "#1f6feb"         # recommended route polyline (blue)
+TRIP_HOME_COLOR = "#2ecc40"          # home marker (green)
+TRIP_DEST_COLOR = "#ff4136"          # destination marker (red)
+
+
+def _route_latlons(
+    route_nodes: list[int],
+    graph: Any,
+) -> list[tuple[float, float]]:
+    """Turn a list of drive-graph node ids into ``(lat, lon)`` points.
+
+    ``trip_time`` returns ``route_nodes`` (the ordered node path origin ->
+    destination); the graph stores each node's ``y`` (lat) and ``x`` (lon). We
+    look each one up and keep the ones that resolve, so a stray/missing node
+    never breaks the polyline. Returns an empty list when the graph is ``None``
+    or no node resolves.
+    """
+    if graph is None or not route_nodes:
+        return []
+    coords: list[tuple[float, float]] = []
+    for node in route_nodes:
+        try:
+            nd = graph.nodes[node]
+            coords.append((float(nd["y"]), float(nd["x"])))
+        except (KeyError, TypeError, ValueError):
+            continue
+    return coords
+
+
+def add_trip_legend(m: folium.Map, broken: bool = False) -> None:
+    """Overlay a small legend for the trip map (home, destination, route)."""
+    note = (
+        '<div style="margin-top:6px; color:#b00; font-weight:bold;">Trip is broken '
+        "(over 30 min)</div>"
+        if broken
+        else ""
+    )
+    legend = folium.Element(
+        f"""
+        <div style="position: fixed; bottom: 30px; left: 30px; z-index: 1000;
+                    background: rgba(255,255,255,0.92); padding: 10px 14px;
+                    border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                    font-size: 12px; font-family: Arial, sans-serif; line-height: 1.6;">
+          <div style="font-weight: bold; margin-bottom: 4px;">My trip</div>
+          <div><span style="color:{TRIP_HOME_COLOR};">&#9679;</span> Home</div>
+          <div><span style="color:{TRIP_DEST_COLOR};">&#9679;</span> Destination</div>
+          <div><span style="color:{TRIP_ROUTE_COLOR};">&#9472;</span> Recommended route</div>
+          {note}
+          <div style="margin-top: 6px; font-style: italic; color: #555;">simulation estimate</div>
+        </div>
+        """
+    )
+    m.get_root().html.add_child(legend)
+
+
+def build_trip_map(
+    route_nodes: list[int],
+    graph: Any,
+    home_latlon: tuple[float, float],
+    dest_latlon: tuple[float, float],
+    *,
+    broken: bool = False,
+    minutes: Optional[float] = None,
+    edge_geometry: Optional[EdgeGeometry] = None,
+) -> folium.Map:
+    """Build a Folium map of one trip: its route, home and destination.
+
+    Task 17 / Requirements 11.1, 11.2. Draws the recommended trip on a map:
+
+      * the **route** as a bold polyline, by looking up each node in
+        ``route_nodes`` (from ``trip_time``) in ``graph`` for its ``(lat, lon)``;
+      * a **home** marker at ``home_latlon`` and a **destination** marker at
+        ``dest_latlon`` (both ``(lat, lon)`` tuples);
+      * a faint grey road backdrop when ``graph`` is provided, so the route reads
+        against the street network.
+
+    When ``route_nodes`` is empty or no node resolves (an unroutable trip, or the
+    GraphML cache isn't loaded), the map still shows home and destination and
+    adds a "no route" note instead of a line — graceful degradation.
+
+    Args:
+      route_nodes: ordered drive-graph node ids for the recommended route.
+      graph: the loaded OSMnx drive graph (or ``None``); supplies node lat/lon
+        and the optional road backdrop.
+      home_latlon: ``(lat, lon)`` of the trip's home/origin.
+      dest_latlon: ``(lat, lon)`` of the trip's destination.
+      broken: whether the trip is broken (over the 30-min threshold); surfaced
+        in the legend.
+      minutes: storm travel time in minutes, shown in the route tooltip when
+        finite.
+      edge_geometry: precomputed road polylines for the grey backdrop (optional;
+        built from ``graph`` on demand if omitted).
+
+    Returns:
+      A ``folium.Map`` centred on the study area, always built without raising.
+    """
+    center_lat = (BBOX["north"] + BBOX["south"]) / 2
+    center_lon = (BBOX["east"] + BBOX["west"]) / 2
+    m = folium.Map(
+        location=[center_lat, center_lon],
+        zoom_start=14,
+        tiles="OpenStreetMap",
+    )
+
+    # --- Road backdrop (neutral grey; the route is the story here) -----------
+    if graph is not None:
+        if edge_geometry is None:
+            edge_geometry = precompute_edge_geometry(graph)
+        for coords in edge_geometry.values():
+            if len(coords) >= 2:
+                folium.PolyLine(
+                    locations=coords,
+                    color="#d0d0d0",
+                    weight=1.5,
+                    opacity=0.5,
+                ).add_to(m)
+
+    # --- Route polyline ------------------------------------------------------
+    route_coords = _route_latlons(route_nodes, graph)
+    has_route = len(route_coords) >= 2
+    if has_route:
+        if minutes is not None and minutes == minutes and minutes != float("inf"):
+            route_tip = f"{minutes:.0f} min under this scenario · simulation estimate"
+        else:
+            route_tip = "Recommended route · simulation estimate"
+        folium.PolyLine(
+            locations=route_coords,
+            color=TRIP_ROUTE_COLOR,
+            weight=6,
+            opacity=0.85,
+            tooltip=route_tip,
+        ).add_to(m)
+        # Fit the view to the route so the whole trip is on screen.
+        m.fit_bounds(route_coords)
+
+    # --- Home and destination markers ---------------------------------------
+    folium.Marker(
+        location=[float(home_latlon[0]), float(home_latlon[1])],
+        tooltip="Home",
+        icon=folium.Icon(color="green", icon="home", prefix="fa"),
+    ).add_to(m)
+    folium.Marker(
+        location=[float(dest_latlon[0]), float(dest_latlon[1])],
+        tooltip="Destination",
+        icon=folium.Icon(color="red", icon="flag-checkered", prefix="fa"),
+    ).add_to(m)
+
+    # --- "No route" note when the trip can't be drawn ------------------------
+    if not has_route:
+        note = folium.Element(
+            """
+            <div style="position: fixed; top: 12px; left: 50%;
+                        transform: translateX(-50%); z-index: 1000;
+                        background: rgba(255, 65, 54, 0.92); color: white;
+                        padding: 8px 14px; border-radius: 6px;
+                        font-size: 13px; font-family: Arial, sans-serif;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
+              No route available under this scenario — showing home and
+              destination only. Simulation estimate.
+            </div>
+            """
+        )
+        m.get_root().html.add_child(note)
+
+    add_trip_legend(m, broken=broken)
+    return m

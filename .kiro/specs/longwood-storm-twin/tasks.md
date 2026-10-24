@@ -116,20 +116,20 @@
 
 ## MVP freeze, 3:30–4:00 (everyone)
 
-- [-] 13. [All] Merge, fix bugs, run the full demo once, `git tag mvp`
-- [~] 14. [D] Record backup video #1 of the MVP demo
+- [x] 13. [All] Merge, fix bugs, run the full demo once, `git tag mvp`
+- [x] 14. [D] Record backup video #1 of the MVP demo
 
 ---
 
 ## Block 4, 4:00–5:00 → CP4: live conditions + one persona's trip
 
-- [~] 15. [A] "Live now" button: NWS → snow fields, MBTA → E suspension + elevators out; on failure use the last saved snapshot and show "data as of HH:MM"
+- [x] 15. [A] "Live now" button: NWS → snow fields, MBTA → E suspension + elevators out; on failure use the last saved snapshot and show "data as of HH:MM"
   - _Requirements: 8.4, 8.5_
-- [~] 16. [B] `trip_time` polish + property test (more snow never makes a trip faster); clear-day vs storm comparison for "time to leave earlier"
+- [x] 16. [B] `trip_time` polish + property test (more snow never makes a trip faster); clear-day vs storm comparison for "time to leave earlier"
   - _Requirements: 16.3, 3.6_
-- [~] 17. [C] "My trip" tab: synthetic persona form (home, destination, arrive-by, needs step-free), route on map, "Leave by" time, .ics download
+- [x] 17. [C] "My trip" tab: synthetic persona form (home, destination, arrive-by, needs step-free), route on map, "Leave by" time, .ics download
   - _Requirements: 4.1, 4.3, 11.1, 11.2_
-- [~] 18. [D] Message (≤ 320 chars, plain language, leave-by time) + test; 3 synthetic personas in `tests/fixtures/`; run the accessibility-reviewer agent; finish the Kiro section of the writeup
+- [x] 18. [D] Message (≤ 320 chars, plain language, leave-by time) + test; 3 synthetic personas in `tests/fixtures/`; run the accessibility-reviewer agent; finish the Kiro section of the writeup
   - _Requirements: 11.3, 13.2, 13.3_
 
 **CP4 (5:00):** if not working, drop it from the demo and present it as the next step.
@@ -138,8 +138,8 @@
 
 ## Integration and submit
 
-- [~] 19. [All] 5:00–5:30 merge, fix, full run-through. **Code freeze at 5:30.**
-- [~] 20. [All] 5:30–6:00 rehearse twice, record final video (D), push repo with `.kiro/` committed, submit writeup
+- [x] 19. [All] 5:00–5:30 merge, fix, full run-through. **Code freeze at 5:30.**
+- [-] 20. [All] 5:30–6:00 rehearse twice, record final video (D), push repo with `.kiro/` committed, submit writeup
 
 ---
 

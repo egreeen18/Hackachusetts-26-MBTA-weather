@@ -484,6 +484,11 @@
         "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
         "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
         "timestamp": 1792875771903
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792876074623
       }
     ],
     "14. [D] Record backup video #1 of the MVP demo": [
@@ -491,6 +496,11 @@
         "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
         "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
         "timestamp": 1792869111403
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792876097371
       }
     ],
     "15. [A] \"Live now\" button: NWS → snow fields, MBTA → E suspension + elevators out; on failure use the last saved snapshot and show \"data as of HH:MM\"": [
@@ -498,6 +508,16 @@
         "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
         "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
         "timestamp": 1792869111473
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792876104046
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792876296890
       }
     ],
     "16. [B] `trip_time` polish + property test (more snow never makes a trip faster); clear-day vs storm comparison for \"time to leave earlier\"": [
@@ -505,6 +525,16 @@
         "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
         "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
         "timestamp": 1792869111576
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792876300133
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792876689875
       }
     ],
     "17. [C] \"My trip\" tab: synthetic persona form (home, destination, arrive-by, needs step-free), route on map, \"Leave by\" time, .ics download": [
@@ -512,6 +542,16 @@
         "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
         "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
         "timestamp": 1792869111716
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792876693152
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792877049238
       }
     ],
     "18. [D] Message (≤ 320 chars, plain language, leave-by time) + test; 3 synthetic personas in `tests/fixtures/`; run the accessibility-reviewer agent; finish the Kiro section of the writeup": [
@@ -519,6 +559,16 @@
         "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
         "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
         "timestamp": 1792869111780
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792877052944
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792877450891
       }
     ],
     "19. [All] 5:00–5:30 merge, fix, full run-through. **Code freeze at 5:30.**": [
@@ -526,6 +576,16 @@
         "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
         "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
         "timestamp": 1792869111851
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792877454893
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792877948919
       }
     ],
     "20. [All] 5:30–6:00 rehearse twice, record final video (D), push repo with `.kiro/` committed, submit writeup": [
@@ -533,6 +593,11 @@
         "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
         "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
         "timestamp": 1792869111914
+      },
+      {
+        "executionId": "f255a91e-14ca-45c5-9b2f-4576f34398b4",
+        "chatSessionId": "sess_59bab769-49d5-4607-8466-3e7ac9f9fe8a",
+        "timestamp": 1792877991127
       }
     ],
     "1. [A] Road network": [
