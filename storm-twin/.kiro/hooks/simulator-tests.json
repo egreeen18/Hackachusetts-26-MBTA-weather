@@ -1,0 +1,20 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Run simulator tests on save",
+      "description": "Whenever the agent edits the twin, scenarios or simulator, run their tests so regressions show up immediately.",
+      "trigger": "PostFileSave",
+      "matcher": "src/(twin|sim)/.*\\.py$|src/contract\\.py$|config/params\\.py$",
+      "action": { "type": "command", "command": "python -m pytest -q tests/sim" },
+      "timeout": 180
+    },
+    {
+      "name": "Full test run after each spec task",
+      "description": "Every completed spec task must leave the test suite green.",
+      "trigger": "PostTaskExecution",
+      "action": { "type": "command", "command": "python -m pytest -q" },
+      "timeout": 300
+    }
+  ]
+}

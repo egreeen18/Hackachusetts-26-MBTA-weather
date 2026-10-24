@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Keep simulation assumptions in sync",
+      "description": "If the storm, fare, emission or buffer constants change, the steering file judges read must change too.",
+      "trigger": "PostFileSave",
+      "matcher": "config/params\\.py$|src/sim/.*\\.py$",
+      "action": {
+        "type": "agent",
+        "prompt": "You just edited simulation parameters or logic. Check that config/params.py and the 'Model rules' in .kiro/steering/simulation-assumptions.md still describe the same model. If they differ, update the steering file to match the code. If the change could break a listed guarantee (more snow never makes anything faster, higher parking compliance never makes things worse), stop and say so instead."
+      }
+    }
+  ]
+}

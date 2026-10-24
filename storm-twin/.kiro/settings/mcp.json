@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "boston-civic": {
+      "command": "python",
+      "args": ["mcp_server/server.py"],
+      "env": {
+        "MBTA_API_KEY": "${MBTA_API_KEY}",
+        "NWS_USER_AGENT": "${NWS_USER_AGENT}"
+      },
+      "disabled": false,
+      "autoApprove": ["mbta_alerts", "mbta_elevators", "nws_alerts", "nws_storm_inputs"]
+    }
+  }
+}

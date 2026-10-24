@@ -1,0 +1,23 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Check resident messages",
+      "description": "Every message template and the message composer must pass the length, clarity and feasibility checks.",
+      "trigger": "PostFileSave",
+      "matcher": "src/outputs/messages\\.py$|templates/.*",
+      "action": { "type": "command", "command": "python -m pytest -q tests/outputs/test_messages.py" },
+      "timeout": 120
+    },
+    {
+      "name": "Privacy guard on writes",
+      "description": "Before the agent writes a file, remind it of the privacy rules so no real personal data lands in fixtures, logs or demos.",
+      "trigger": "PreToolUse",
+      "matcher": "write",
+      "action": {
+        "type": "agent",
+        "prompt": "Before writing: confirm this change follows .kiro/steering/privacy-and-messages.md. Fixtures and demo data must be synthetic. No field may store a medical reason for a trip. Log statements may include ids, counts and timings only, never names, addresses or destinations. If the write would break any of these, change it first."
+      }
+    }
+  ]
+}
