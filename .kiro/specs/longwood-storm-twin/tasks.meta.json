@@ -1,0 +1,36 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "3.1 [C] `app.py`: sliders for snowfall (0–30), start hour, duration, hour to view, parking compliance, E suspended toggle; build the scenario dict; call the stub `run_simulation`": [
+      {
+        "executionId": "f3431c81-6e88-4ab9-b25e-6844f17977cb",
+        "chatSessionId": "sess_8f04de12-6772-4fc5-be48-ebdd19fd903f",
+        "timestamp": 1792859882676
+      },
+      {
+        "executionId": "f3431c81-6e88-4ab9-b25e-6844f17977cb",
+        "chatSessionId": "sess_8f04de12-6772-4fc5-be48-ebdd19fd903f",
+        "timestamp": 1792860008304
+      }
+    ],
+    "3.2 [C] Folium map of the bbox via `streamlit-folium`; KPI card placeholders; once A's GraphML exists, draw edges (load with `st.cache_resource`)": [
+      {
+        "executionId": "f3431c81-6e88-4ab9-b25e-6844f17977cb",
+        "chatSessionId": "sess_8f04de12-6772-4fc5-be48-ebdd19fd903f",
+        "timestamp": 1792860012706
+      },
+      {
+        "executionId": "f3431c81-6e88-4ab9-b25e-6844f17977cb",
+        "chatSessionId": "sess_8f04de12-6772-4fc5-be48-ebdd19fd903f",
+        "timestamp": 1792860681526
+      }
+    ],
+    "3. [C] Streamlit shell": [
+      {
+        "executionId": "f3431c81-6e88-4ab9-b25e-6844f17977cb",
+        "chatSessionId": "sess_8f04de12-6772-4fc5-be48-ebdd19fd903f",
+        "timestamp": 1792860681570
+      }
+    ]
+  }
+}

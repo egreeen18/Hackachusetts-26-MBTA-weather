@@ -45,10 +45,10 @@
     - _Requirements: 3.4, 3.7_
   - [ ] 2.3 [B] Tests, including property tests: more snow never lowers snow-on-road; 0 in gives factor 1.0
     - _Requirements: 3.6, 3.7_
-- [ ] 3. [C] Streamlit shell
-  - [ ] 3.1 [C] `app.py`: sliders for snowfall (0–30), start hour, duration, hour to view, parking compliance, E suspended toggle; build the scenario dict; call the stub `run_simulation`
+- [x] 3. [C] Streamlit shell
+  - [x] 3.1 [C] `app.py`: sliders for snowfall (0–30), start hour, duration, hour to view, parking compliance, E suspended toggle; build the scenario dict; call the stub `run_simulation`
     - _Requirements: 16.1_
-  - [ ] 3.2 [C] Folium map of the bbox via `streamlit-folium`; KPI card placeholders; once A's GraphML exists, draw edges (load with `st.cache_resource`)
+  - [x] 3.2 [C] Folium map of the bbox via `streamlit-folium`; KPI card placeholders; once A's GraphML exists, draw edges (load with `st.cache_resource`)
     - _Requirements: 11.4_
 - [ ] 4. [D] Parameters and setup
   - [ ] 4.1 [D] Own `config/params.py` (defaults already drafted): read every number, adjust anything that looks wrong, keep `simulation-assumptions.md` in sync
