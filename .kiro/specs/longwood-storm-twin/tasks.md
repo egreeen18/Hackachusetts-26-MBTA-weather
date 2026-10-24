@@ -38,12 +38,12 @@
     - _Requirements: 1.4_
   - [ ] 1.3 [A] Get the 3 hospitals from OSM (`amenity=hospital`), snap each to a sensible drive node, save `data/cache/hospitals.json`
     - _Requirements: 15.1_
-- [ ] 2. [B] Snow and plowing rules (pure functions, dummy data)
-  - [ ] 2.1 [B] `snow_on_road(road_class, scenario, hour)`: even accumulation over the storm, plow schedule per class, side streets cleared after the storm ends
+- [x] 2. [B] Snow and plowing rules (pure functions, dummy data)
+  - [x] 2.1 [B] `snow_on_road(road_class, scenario, hour)`: even accumulation over the storm, plow schedule per class, side streets cleared after the storm ends
     - _Requirements: 3.1, 3.2_
-  - [ ] 2.2 [B] `capacity_factor(snow_in, road_class)`: interpolate `CAPACITY_TABLE`; side streets ≥ 12 in → 0 (impassable)
+  - [x] 2.2 [B] `capacity_factor(snow_in, road_class)`: interpolate `CAPACITY_TABLE`; side streets ≥ 12 in → 0 (impassable)
     - _Requirements: 3.4, 3.7_
-  - [ ] 2.3 [B] Tests, including property tests: more snow never lowers snow-on-road; 0 in gives factor 1.0
+  - [x] 2.3 [B] Tests, including property tests: more snow never lowers snow-on-road; 0 in gives factor 1.0
     - _Requirements: 3.6, 3.7_
 - [x] 3. [C] Streamlit shell
   - [x] 3.1 [C] `app.py`: sliders for snowfall (0–30), start hour, duration, hour to view, parking compliance, E suspended toggle; build the scenario dict; call the stub `run_simulation`
