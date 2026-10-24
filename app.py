@@ -30,8 +30,9 @@ from src.contract import Scenario, SimResult, run_simulation
 if TYPE_CHECKING:
     import networkx as nx
 
-# Cached OSMnx drive graph (created by task 1.1; may not exist yet).
-GRAPH_CACHE = Path(__file__).resolve().parent / "data" / "cache" / "drive_graph.graphml"
+# Cached OSMnx drive graph (created by task 1.1 in src/twin/network.py, which
+# saves it as drive.graphml; may not exist yet on a fresh checkout).
+GRAPH_CACHE = Path(__file__).resolve().parent / "data" / "cache" / "drive.graphml"
 
 
 # --------------------------------------------------------------------------- color helpers
@@ -143,7 +144,7 @@ def build_city_map(result: SimResult, graph: Any) -> folium.Map:
     m = folium.Map(
         location=[center_lat, center_lon],
         zoom_start=14,
-        tiles="cartodbpositron",
+        tiles="OpenStreetMap",
     )
 
     # --- Roads (only if the cached graph is available) ---
